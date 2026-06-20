@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why WooCommerce payments fail (and how to actually fix it) — ZextaPay</title>
+<meta name="description" content="A failed WooCommerce payment can come from the customer's bank, your gateway, or your store configuration. Here's how to tell which — and what to do about each.">
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.31.0/iconfont/tabler-icons.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+
+<!-- Google Analytics (GA4) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+</script>
+
+<!-- PostHog -->
+<script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init('phc_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX', { api_host: 'https://app.posthog.com' });
+</script>
+
+<style>
+  .post-hero{padding:56px 0 40px;border-bottom:1px solid var(--line);}
+  .post-hero .back{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:13.5px;color:var(--ink-faint);font-weight:500;
+    margin-bottom:24px;
+  }
+  .post-hero .back:hover{color:var(--ink-soft);}
+  .post-hero h1{font-size:38px;max-width:760px;}
+  .post-meta-row{
+    display:flex;align-items:center;gap:8px;
+    font-size:13.5px;color:var(--ink-faint);
+    margin-top:18px;
+  }
+  .post-tag{
+    font-size:11.5px;font-weight:600;
+    text-transform:uppercase;letter-spacing:0.03em;
+    padding:4px 10px;border-radius:5px;
+    background:var(--ok-bg);color:var(--ok-deep);
+  }
+
+  article{
+    max-width:700px;
+    margin:0 auto;
+    padding:48px 0 96px;
+  }
+  article h2{font-size:24px;margin-top:48px;margin-bottom:16px;}
+  article h2:first-child{margin-top:0;}
+  article h3{font-size:18px;margin-top:32px;margin-bottom:12px;}
+  article p{font-size:16.5px;color:var(--ink-soft);margin-bottom:18px;}
+  article ul,article ol{margin:0 0 18px;padding-left:22px;}
+  article li{font-size:16.5px;color:var(--ink-soft);margin-bottom:8px;}
+  article strong{color:var(--ink);font-weight:600;}
+  article .lede{font-size:19px;color:var(--ink-soft);margin-bottom:8px;}
+
+  .callout{
+    background:var(--paper-sunken);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:24px 26px;
+    margin:32px 0;
+  }
+  .callout-title{
+    display:flex;align-items:center;gap:8px;
+    font-weight:600;font-size:15px;
+    margin-bottom:8px;
+  }
+  .callout-title i{color:var(--alert-deep);font-size:18px;}
+  .callout p{margin-bottom:0;font-size:15px;}
+
+  .cause-table{
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+    margin:24px 0 32px;
+  }
+  .cause-row{
+    display:grid;
+    grid-template-columns:160px 1fr;
+    border-bottom:1px solid var(--line);
+  }
+  .cause-row:last-child{border-bottom:none;}
+  .cause-label{
+    background:var(--paper-sunken);
+    padding:16px 18px;
+    font-size:13.5px;font-weight:600;
+    color:var(--ink-soft);
+  }
+  .cause-detail{padding:16px 18px;font-size:14.5px;color:var(--ink-soft);}
+
+  .cta-inline{
+    background:var(--ink);
+    border-radius:14px;
+    padding:32px;
+    margin:40px 0;
+    text-align:center;
+  }
+  .cta-inline h3{color:var(--paper);font-size:20px;margin-top:0;margin-bottom:8px;}
+  .cta-inline p{color:rgba(255,255,255,0.6);font-size:14.5px;margin-bottom:20px;}
+  .cta-inline .btn-primary{background:var(--paper);color:var(--ink);}
+
+  @media (max-width:860px){
+    article{padding:32px 0 64px;}
+    .post-hero h1{font-size:28px;}
+    .cause-row{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav>
+      <a href="../index.html" class="logo">
+        <span class="logo-mark"><img src="../assets/logo.png" alt="ZextaPay logo"></span>
+        ZextaPay
+      </a>
+      <div class="nav-links">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how-it-works">How it works</a>
+        <a href="../index.html#pricing">Pricing</a>
+        <a href="index.html" class="current">Blog</a>
+      </div>
+      <div class="nav-actions nav-mobile-hide">
+        <a href="../index.html#faq" class="btn btn-ghost btn-sm">FAQ</a>
+        <a href="https://wordpress.org/plugins/zextapay-payment-monitor/" class="btn btn-primary btn-sm">Install free</a>
+      </div>
+      <button class="nav-burger" id="nav-burger" aria-label="Open menu" aria-expanded="false">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+    </nav>
+    <div class="nav-mobile-panel" id="nav-mobile-panel">
+      <a href="../index.html#features">Features</a>
+      <a href="../index.html#how-it-works">How it works</a>
+      <a href="../index.html#pricing">Pricing</a>
+      <a href="../index.html#faq">FAQ</a>
+      <a href="index.html" class="current">Blog</a>
+      <a href="https://wordpress.org/plugins/zextapay-payment-monitor/" class="btn btn-primary" style="justify-content:center;margin-top:10px;">Install free</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="post-hero">
+    <div class="wrap">
+      <a href="index.html" class="back"><i class="ti ti-arrow-left"></i> Back to blog</a>
+      <span class="post-tag">Guide</span>
+      <h1 style="margin-top:14px;">Why WooCommerce payments fail (and how to actually fix it)</h1>
+      <div class="post-meta-row">
+        <i class="ti ti-calendar"></i> June 2026 <span style="margin:0 4px;">·</span> 7 min read
+      </div>
+    </div>
+  </div>
+
+  <article>
+    <p class="lede">A customer is ready to buy. Checkout loads. Then the payment fails — and you're left with no sale, no clear reason why, and a generic "Failed" status sitting in your orders list.</p>
+
+    <p>"Payment failed" is one of the most common — and most misunderstood — messages a WooCommerce store owner will see. It's a generic outcome that can come from three completely different places: the customer's bank, your payment gateway, or your store's own configuration. Treating all three the same way is why so many failed payments go unresolved.</p>
+
+    <p>Here's how to tell which one you're actually dealing with, and what to do about each.</p>
+
+    <h2>Start with where the failure actually happened</h2>
+
+    <p>Every failed order in WooCommerce leaves a trail. Go to <strong>WooCommerce → Orders</strong>, find the order marked Failed, and open it. The order notes panel on the right will usually tell you what happened, even if the message is cryptic.</p>
+
+    <p>From there, the failure almost always falls into one of three buckets:</p>
+
+    <div class="cause-table">
+      <div class="cause-row">
+        <div class="cause-label">Customer-side</div>
+        <div class="cause-detail">Declined card, insufficient funds, failed bank authentication, or fraud checks. Largely outside your control — but worth knowing it's not your store's fault.</div>
+      </div>
+      <div class="cause-row">
+        <div class="cause-label">Gateway-side</div>
+        <div class="cause-detail">Stripe, PayPal, or another processor times out, has an outage, or rejects the request. This is intermittent and easy to miss if you're not watching for it.</div>
+      </div>
+      <div class="cause-row">
+        <div class="cause-label">Store-side</div>
+        <div class="cause-detail">Expired API keys, plugin conflicts, outdated WooCommerce or gateway plugin versions, or server resource limits. Usually repeatable — the same customer will fail again and again.</div>
+      </div>
+    </div>
+
+    <h2>Customer-side failures: not your problem to fix, but worth knowing</h2>
+
+    <p>Card declines and failed bank authentication are the most common reason a payment doesn't go through, and there's nothing wrong with your store when this happens. The useful move here isn't fixing anything — it's making it easy for the customer to retry with a different method. If a card fails, offering PayPal or another payment option as a fallback can recover a sale that would otherwise be lost.</p>
+
+    <h2>Gateway-side failures: the ones you don't see happening</h2>
+
+    <p>This is the category that does the most damage, because it's invisible by default. Your store's homepage loads fine. Product pages work. Everything looks healthy — except checkout, intermittently, for some percentage of customers. Unless you're actively watching gateway success rates, the first sign of a problem is usually a slow week of sales you can't explain, or a customer complaint days later.</p>
+
+    <div class="callout">
+      <div class="callout-title"><i class="ti ti-alert-triangle"></i> Why this is worse than it sounds</div>
+      <p>A single declined card is normal. A gateway timing out on 1 in 5 transactions for two hours is a silent outage — and by the time you notice the dip in revenue, you've likely already lost a meaningful number of sales you'll never get back.</p>
+    </div>
+
+    <p>The fix isn't a one-time troubleshooting step — it's visibility. You want to know the moment your gateway's success rate drops, not after reviewing a week of order data. That's the gap a monitoring tool is built to close: watching every transaction in the background and flagging the pattern before it costs you a day's revenue.</p>
+
+    <h2>Store-side failures: the ones that repeat</h2>
+
+    <p>If the same type of failure keeps happening regardless of which customer or card is used, the cause is usually on your end. The most common culprits:</p>
+
+    <ul>
+      <li><strong>Expired or invalid API keys</strong> — payment processors periodically rotate credentials for security; an expired key will fail every transaction until updated.</li>
+      <li><strong>Outdated plugins</strong> — an old version of WooCommerce, your theme, or the gateway plugin itself can silently break compatibility after an update.</li>
+      <li><strong>Plugin conflicts</strong> — another plugin interfering with the checkout flow, often only on certain browsers or devices.</li>
+      <li><strong>Server limits</strong> — insufficient PHP memory or execution time can cause checkout to fail under load, especially during traffic spikes.</li>
+    </ul>
+
+    <p>These are worth checking first because they're entirely within your control, and fixing one often resolves a cluster of failures at once.</p>
+
+    <h2>The real fix: stop finding out after the fact</h2>
+
+    <p>Troubleshooting after a customer complains will always put you behind. The store owners who lose the least revenue to payment failures are the ones who know within minutes — not days — that something's wrong.</p>
+
+    <p>That's the entire premise behind <strong>ZextaPay</strong>: it watches every transaction across your WooCommerce gateways in real time, shows you exactly how much revenue is at risk from failed payments, and translates cryptic gateway errors into plain English — so you're never the last to know your own checkout is broken.</p>
+
+    <div class="cta-inline">
+      <h3>See your failed payments in real time</h3>
+      <p>Free dashboard for WooCommerce. No card data stored. 2-minute setup.</p>
+      <a href="https://wordpress.org/plugins/zextapay-payment-monitor/" class="btn btn-primary">Install ZextaPay free <i class="ti ti-arrow-right"></i></a>
+    </div>
+
+    <h2>A quick checklist</h2>
+
+    <ol>
+      <li>Check the order notes on the failed order first — it usually tells you which category you're in.</li>
+      <li>If it's customer-side, offer a second payment method at checkout.</li>
+      <li>If it's repeatable across different customers, check your API keys and plugin versions first.</li>
+      <li>If it's intermittent and hard to pin down, you're likely looking at gateway-side instability — and you need real-time visibility, not manual log-checking, to catch it.</li>
+    </ol>
+
+    <p>Failed payments will never disappear entirely — declines and bank checks are a normal part of e-commerce. But the silent, costly ones — the gateway outages and misconfigurations that drain revenue for hours before anyone notices — are entirely preventable with the right visibility in place.</p>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <a href="../index.html" class="logo">
+        <span class="logo-mark"><img src="../assets/logo.png" alt="ZextaPay logo"></span>
+        ZextaPay
+      </a>
+      <div class="foot-links">
+        <div class="foot-col">
+          <h4>Product</h4>
+          <a href="../index.html#features">Features</a>
+          <a href="../index.html#pricing">Pricing</a>
+          <a href="../index.html#how-it-works">How it works</a>
+        </div>
+        <div class="foot-col">
+          <h4>Resources</h4>
+          <a href="../index.html#faq">FAQ</a>
+          <a href="index.html">Blog</a>
+        </div>
+        <div class="foot-col">
+          <h4>Company</h4>
+          <a href="../index.html">About</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 ZextaPay. All rights reserved.</span>
+      <span>Built for WooCommerce</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const navBurger = document.getElementById('nav-burger');
+  const navPanel = document.getElementById('nav-mobile-panel');
+  navBurger.addEventListener('click', () => {
+    const isOpen = navPanel.classList.toggle('open');
+    navBurger.setAttribute('aria-expanded', isOpen);
+    navBurger.innerHTML = isOpen ? '<i class="ti ti-x" aria-hidden="true"></i>' : '<i class="ti ti-menu-2" aria-hidden="true"></i>';
+  });
+  navPanel.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      navPanel.classList.remove('open');
+      navBurger.setAttribute('aria-expanded', 'false');
+      navBurger.innerHTML = '<i class="ti ti-menu-2" aria-hidden="true"></i>';
+    });
+  });
+</script>
+</body>
+</html>

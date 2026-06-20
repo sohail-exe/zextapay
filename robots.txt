@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://zextapay.com/sitemap.xml
