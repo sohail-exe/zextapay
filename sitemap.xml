@@ -11,12 +11,27 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://zextapay.com/blog/monitor-woocommerce-payment-gateway-health.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://zextapay.com/blog/why-woocommerce-payments-fail.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://zextapay.com/blog/stripe-vs-paypal-woocommerce.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zextapay.com/blog/stripe-paid-woocommerce-order-failed.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://zextapay.com/blog/woocommerce-subscription-payment-failures.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
