@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Monitor WooCommerce Payment Gateway Health (Complete Guide) — ZextaPay</title>
+<meta name="description" content="A complete guide to monitoring WooCommerce payment gateway health — native tools, third-party options, what to track, and how to catch failures before they cost you sales.">
+<link rel="canonical" href="https://zextapay.com/blog/monitor-woocommerce-payment-gateway-health.html">
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.31.0/iconfont/tabler-icons.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S54P09NDZS"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-S54P09NDZS');
+</script>
+<script>
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init('phc_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX', { api_host: 'https://app.posthog.com' });
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is payment gateway monitoring for WooCommerce?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Payment gateway monitoring is the practice of tracking the health and success rate of your WooCommerce payment gateways in real time, so you can detect failures, outages, and unusual decline patterns as they happen rather than discovering them later through lost revenue or customer complaints."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does WooCommerce have built-in payment monitoring?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "WooCommerce has basic logging under Status > Logs that records gateway errors, but it is not real-time, does not alert you, and requires manually checking log files to find issues. It is not a substitute for dedicated monitoring."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What metrics should I track for payment gateway health?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The key metrics are gateway success rate over time, failed transaction count and reasons, revenue at risk from failed payments, webhook delivery success, and time-to-detection when a gateway starts failing."
+      }
+    }
+  ]
+}
+</script>
+
+<style>
+  .post-hero{padding:56px 0 40px;border-bottom:1px solid var(--line);}
+  .post-hero .back{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink-faint);font-weight:500;margin-bottom:24px;}
+  .post-hero .back:hover{color:var(--ink-soft);}
+  .post-hero h1{font-size:36px;max-width:760px;line-height:1.12;}
+  .post-meta-row{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-faint);margin-top:18px;flex-wrap:wrap;}
+  .post-tag{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;padding:4px 10px;border-radius:5px;background:#EDE9FB;color:#5A3FA8;}
+  article{max-width:700px;margin:0 auto;padding:48px 0 96px;}
+  article h2{font-size:24px;margin-top:48px;margin-bottom:16px;}
+  article h2:first-child{margin-top:0;}
+  article h3{font-size:18px;margin-top:32px;margin-bottom:12px;}
+  article p{font-size:16.5px;color:var(--ink-soft);margin-bottom:18px;}
+  article ul,article ol{margin:0 0 18px;padding-left:22px;}
+  article li{font-size:16.5px;color:var(--ink-soft);margin-bottom:8px;}
+  article strong{color:var(--ink);font-weight:600;}
+  article .lede{font-size:19px;color:var(--ink-soft);margin-bottom:20px;line-height:1.55;}
+
+  /* TOC */
+  .toc{
+    border:1px solid var(--line);border-radius:12px;
+    padding:22px 26px;margin-bottom:36px;
+    background:var(--paper-sunken);
+  }
+  .toc-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;color:var(--ink-faint);margin-bottom:12px;}
+  .toc ol{margin:0;padding-left:20px;}
+  .toc li{font-size:14.5px;margin-bottom:6px;}
+  .toc a{color:var(--ink-soft);}
+  .toc a:hover{color:var(--ink);}
+
+  .method-card{
+    border:1px solid var(--line);border-radius:12px;
+    padding:22px 24px;margin:20px 0;
+  }
+  .method-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;}
+  .method-card h3{margin:0;font-size:17px;}
+  .method-badge{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;padding:3px 9px;border-radius:5px;flex-shrink:0;}
+  .badge-free{background:var(--ok-bg);color:var(--ok-deep);}
+  .badge-manual{background:var(--paper-sunken);color:var(--ink-soft);}
+  .badge-realtime{background:var(--alert-bg);color:var(--alert-deep);}
+  .method-card p{margin-bottom:8px;font-size:14.5px;}
+  .method-pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;}
+  .pc-col{font-size:13.5px;}
+  .pc-col strong{display:block;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;color:var(--ink-faint);margin-bottom:6px;}
+  .pc-col.pro strong{color:var(--ok-deep);}
+  .pc-col.con strong{color:var(--alert-deep);}
+  .pc-col ul{margin:0;padding-left:16px;}
+  .pc-col li{font-size:13px;margin-bottom:4px;color:var(--ink-soft);}
+
+  .metric-table{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:24px 0 32px;width:100%;border-collapse:collapse;}
+  .metric-table th{background:var(--paper-sunken);padding:12px 16px;font-size:13px;font-weight:600;color:var(--ink-faint);text-align:left;border-bottom:1px solid var(--line);}
+  .metric-table td{padding:13px 16px;font-size:14px;color:var(--ink-soft);border-bottom:1px solid var(--line);}
+  .metric-table tr:last-child td{border-bottom:none;}
+
+  .callout{background:var(--paper-sunken);border:1px solid var(--line);border-radius:12px;padding:24px 26px;margin:32px 0;}
+  .callout-title{display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px;margin-bottom:8px;}
+  .callout-title i{color:var(--ok-deep);font-size:18px;}
+  .callout-title i.warn{color:var(--alert-deep);}
+  .callout p{margin-bottom:0;font-size:15px;}
+
+  .cta-inline{background:var(--ink);border-radius:14px;padding:32px;margin:40px 0;text-align:center;}
+  .cta-inline h3{color:var(--paper);font-size:20px;margin-top:0;margin-bottom:8px;}
+  .cta-inline p{color:rgba(255,255,255,0.6);font-size:14.5px;margin-bottom:20px;}
+  .cta-inline .btn-primary{background:var(--paper);color:var(--ink);}
+
+  .related-post{display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin:16px 0;transition:border-color .15s ease;}
+  .related-post:hover{border-color:var(--line-strong);}
+  .related-post-text{font-size:13.5px;color:var(--ink-faint);margin-bottom:4px;}
+  .related-post-title{font-size:16px;font-weight:600;color:var(--ink);}
+  .related-post i{color:var(--ink-faint);font-size:20px;flex-shrink:0;}
+
+  .faq-section{margin-top:48px;}
+  .faq-section h2{margin-bottom:24px;}
+  .faq-item-article{border-bottom:1px solid var(--line);padding:18px 0;}
+  .faq-item-article:first-of-type{border-top:1px solid var(--line);}
+  .faq-item-article h3{margin:0 0 8px;font-size:16px;}
+  .faq-item-article p{margin:0;font-size:15px;}
+
+  @media (max-width:860px){
+    .post-hero h1{font-size:26px;}
+    article{padding:32px 0 64px;}
+    .method-pros-cons{grid-template-columns:1fr;}
+    .metric-table th,.metric-table td{padding:10px 12px;font-size:13px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav>
+      <a href="../index.html" class="logo">
+        <span class="logo-mark"><img src="../assets/logo.png" alt="ZextaPay logo"></span>
+        ZextaPay
+      </a>
+      <div class="nav-links">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#how-it-works">How it works</a>
+        <a href="../index.html#pricing">Pricing</a>
+        <a href="index.html" class="current">Blog</a>
+      </div>
+      <div class="nav-actions nav-mobile-hide">
+        <a href="../index.html#faq" class="btn btn-ghost btn-sm">FAQ</a>
+        <a href="https://wordpress.org/plugins/zextapay-payment-monitor/" class="btn btn-primary btn-sm">Install free</a>
+      </div>
+      <button class="nav-burger" id="nav-burger" aria-label="Open menu" aria-expanded="false">
+        <i class="ti ti-menu-2" aria-hidden="true"></i>
+      </button>
+    </nav>
+    <div class="nav-mobile-panel" id="nav-mobile-panel">
+      <a href="../index.html#features">Features</a>
+      <a href="../index.html#how-it-works">How it works</a>
+      <a href="../index.html#pricing">Pricing</a>
+      <a href="../index.html#faq">FAQ</a>
+      <a href="index.html" class="current">Blog</a>
+      <a href="https://wordpress.org/plugins/zextapay-payment-monitor/" class="btn btn-primary" style="justify-content:center;margin-top:10px;">Install free</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="post-hero">
+    <div class="wrap">
+      <a href="index.html" class="back"><i class="ti ti-arrow-left"></i> Back to blog</a>
+      <span class="post-tag">Complete Guide</span>
+      <h1 style="margin-top:14px;">How to monitor WooCommerce payment gateway health</h1>
+      <div class="post-meta-row"><i class="ti ti-calendar"></i> June 2026 <span style="margin:0 4px;">·</span> 10 min read</div>
+    </div>
+  </div>
+
+  <article>
+    <p class="lede">"How do you guys monitor your payment gateway health?" comes up regularly in WooCommerce communities, and the honest answer is that most stores don't — not properly. This guide covers every method available, from free manual approaches to real-time monitoring, so you can pick what's right for your store's size and risk tolerance.</p>
+
+    <div class="toc">
+      <div class="toc-title">In this guide</div>
+      <ol>
+        <li><a href="#why">Why gateway monitoring matters</a></li>
+        <li><a href="#metrics">What to actually track</a></li>
+        <li><a href="#methods">Every monitoring method available</a></li>
+        <li><a href="#choosing">How to choose the right approach</a></li>
+      </ol>
+    </div>
+
+    <h2 id="why">Why gateway monitoring matters</h2>
+
+    <p>WooCommerce has no native concept of gateway "health." It processes transactions one at a time and logs errors individually, but there's no built-in view that tells you your Stripe success rate dropped from 97% to 60% over the last hour. That gap is exactly where revenue quietly leaks.</p>
+
+    <p>A gateway can fail in ways that don't show up as an obvious outage — a partial degradation where some percentage of transactions fail while others succeed, an API rate limit kicking in during a traffic spike, or a webhook silently failing while the payment itself still processes. None of these trigger any WordPress error, any downtime alert, or anything a typical store owner would notice without specifically watching for it.</p>
+
+    <h2 id="metrics">What to actually track</h2>
+
+    <table class="metric-table">
+      <thead>
+        <tr><th>Metric</th><th>Why it matters</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Gateway success rate</strong></td>
+          <td>The single most useful number — a drop signals a problem before it becomes an outage</td>
+        </tr>
+        <tr>
+          <td><strong>Failed transaction reasons</strong></td>
+          <td>Distinguishes customer-side declines from gateway or store-side issues</td>
+        </tr>
+        <tr>
+          <td><strong>Revenue at risk</strong></td>
+          <td>Converts abstract failure counts into a number that motivates action</td>
+        </tr>
+        <tr>
+          <td><strong>Webhook delivery success</strong></td>
+          <td>Catches the "payment succeeded but no order created" failure mode</td>
+        </tr>
+        <tr>
+          <td><strong>Time to detection</strong></td>
+          <td>How long between a gateway starting to fail and you finding out — the metric that determines how much revenue you actually lose</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 id="methods">Every monitoring method available</h2>
+
+    <div class="method-card">
+      <div class="method-card-head">
+        <h3>1. WooCommerce Status → Logs</h3>
+        <span class="method-badge badge-free">Free</span>
+      </div>
+      <p>Built into every WooCommerce install. Filter by gateway to see raw error entries as they're logged.</p>
+      <div class="method-pros-cons">
+        <div class="pc-col pro"><strong>Pros</strong><ul><li>Free, always available</li><li>No setup required</li></ul></div>
+        <div class="pc-col con"><strong>Cons</strong><ul><li>Manual — you have to check it</li><li>No alerts, no success rate view</li><li>Hard to read for non-technical users</li></ul></div>
+      </div>
+    </div>
+
+    <div class="method-card">
+      <div class="method-card-head">
+        <h3>2. Uptime monitoring (UptimeRobot, Better Stack)</h3>
+        <span class="method-badge badge-manual">Free tier available</span>
+      </div>
+      <p>Pings your checkout page URL periodically to confirm it's responding.</p>
+      <div class="method-pros-cons">
+        <div class="pc-col pro"><strong>Pros</strong><ul><li>Catches full site outages fast</li><li>Simple to set up</li></ul></div>
+        <div class="pc-col con"><strong>Cons</strong><ul><li>Misses gateway-specific failures — page can load fine while payments fail</li><li>No transaction-level visibility</li></ul></div>
+      </div>
+    </div>
+
+    <div class="method-card">
+      <div class="method-card-head">
+        <h3>3. Gateway dashboards (Stripe, PayPal directly)</h3>
+        <span class="method-badge badge-manual">Free, manual</span>
+      </div>
+      <p>Both Stripe and PayPal have their own dashboards showing transaction success rates.</p>
+      <div class="method-pros-cons">
+        <div class="pc-col pro"><strong>Pros</strong><ul><li>Accurate, direct from source</li><li>Free</li></ul></div>
+        <div class="pc-col con"><strong>Cons</strong><ul><li>Separate dashboard per gateway — no unified view</li><li>No connection to your actual WooCommerce order data</li><li>Still requires manually checking</li></ul></div>
+      </div>
+    </div>
+
+    <div class="method-card">
+      <div class="method-card-head">
+        <h3>4. Real-time WooCommerce gateway monitoring (ZextaPay)</h3>
+        <span class="method-badge badge-realtime">Free + paid tiers</span>
+      </div>
+      <p>Watches every transaction across all your gateways continuously, shows a live success rate, and flags failures with plain-English explanations as they happen.</p>
+      <div class="method-pros-cons">
+        <div class="pc-col pro"><strong>Pros</strong><ul><li>Real-time, no manual checking</li><li>Unified view across all gateways</li><li>Free tier covers the dashboard fully</li><li>Paid tier adds instant alerts</li></ul></div>
+        <div class="pc-col con"><strong>Cons</strong><ul><li>One more plugin to install</li><li>Alerts require the paid Starter tier</li></ul></div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-title"><i class="ti ti-circle-check"></i> The realistic recommendation</div>
+      <p>Layer these rather than picking one. Uptime monitoring catches full outages. Real-time gateway monitoring catches the partial degradations and silent failures that uptime checks miss entirely — which, based on how most stores actually lose revenue, is where the real risk sits.</p>
+    </div>
+
+    <h2 id="choosing">How to choose the right approach for your store</h2>
+
+    <ul>
+      <li><strong>Very low volume, just starting out</strong> — WooCommerce's native logs plus occasionally checking your gateway dashboards is probably sufficient for now.</li>
+      <li><strong>Growing store, meaningful daily revenue</strong> — this is where manual checking starts costing real money. A free real-time dashboard becomes worth the five-minute install.</li>
+      <li><strong>Subscription or recurring revenue business</strong> — silent failures compound over every renewal cycle. Real-time monitoring plus alerts is close to essential here.</li>
+      <li><strong>Running multiple gateways (Stripe + PayPal, etc.)</strong> — a unified view matters most here, since checking two separate dashboards manually rarely happens consistently.</li>
+    </ul>
+
+    <p>Whatever you choose, the underlying principle is the same: the cost of monitoring is always smaller than the cost of not knowing. A gateway failing silently for even a few hours, on a store doing meaningful daily volume, typically costs far more than any monitoring tool — free or paid.</p>
+
+    <div class="cta-inline">
+      <h3>Get real-time visibility into your gateways, free</h3>
+      <p>Live dashboard, gateway success rates, revenue at risk — across Stripe, PayPal, Square and more.</p>
+      <a href="https://wordpress.org/plugins/zextapay-payment-monitor/" class="btn btn-primary">Install ZextaPay free <i class="ti ti-arrow-right"></i></a>
+    </div>
+
+    <a href="why-woocommerce-payments-fail.html" class="related-post">
+      <div>
+        <div class="related-post-text">Related reading</div>
+        <div class="related-post-title">Why WooCommerce payments fail (and how to actually fix it)</div>
+      </div>
+      <i class="ti ti-arrow-right"></i>
+    </a>
+    <a href="stripe-vs-paypal-woocommerce.html" class="related-post">
+      <div>
+        <div class="related-post-text">Related reading</div>
+        <div class="related-post-title">Stripe vs PayPal for WooCommerce: which fails less?</div>
+      </div>
+      <i class="ti ti-arrow-right"></i>
+    </a>
+    <a href="stripe-paid-woocommerce-order-failed.html" class="related-post">
+      <div>
+        <div class="related-post-text">Related reading</div>
+        <div class="related-post-title">Stripe payment succeeded but WooCommerce order failed? Here's why</div>
+      </div>
+      <i class="ti ti-arrow-right"></i>
+    </a>
+    <a href="woocommerce-subscription-payment-failures.html" class="related-post">
+      <div>
+        <div class="related-post-text">Related reading</div>
+        <div class="related-post-title">WooCommerce subscription payment failures: how to stop losing recurring revenue</div>
+      </div>
+      <i class="ti ti-arrow-right"></i>
+    </a>
+
+    <div class="faq-section">
+      <h2>Frequently asked questions</h2>
+      <div class="faq-item-article">
+        <h3>What is payment gateway monitoring for WooCommerce?</h3>
+        <p>Payment gateway monitoring is the practice of tracking the health and success rate of your WooCommerce payment gateways in real time, so you can detect failures, outages, and unusual decline patterns as they happen rather than discovering them later through lost revenue or customer complaints.</p>
+      </div>
+      <div class="faq-item-article">
+        <h3>Does WooCommerce have built-in payment monitoring?</h3>
+        <p>WooCommerce has basic logging under Status → Logs that records gateway errors, but it is not real-time, does not alert you, and requires manually checking log files to find issues. It is not a substitute for dedicated monitoring.</p>
+      </div>
+      <div class="faq-item-article">
+        <h3>What metrics should I track for payment gateway health?</h3>
+        <p>The key metrics are gateway success rate over time, failed transaction count and reasons, revenue at risk from failed payments, webhook delivery success, and time-to-detection when a gateway starts failing.</p>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <a href="../index.html" class="logo">
+        <span class="logo-mark"><img src="../assets/logo.png" alt="ZextaPay logo"></span>
+        ZextaPay
+      </a>
+      <div class="foot-links">
+        <div class="foot-col">
+          <h4>Product</h4>
+          <a href="../index.html#features">Features</a>
+          <a href="../index.html#pricing">Pricing</a>
+          <a href="../index.html#how-it-works">How it works</a>
+        </div>
+        <div class="foot-col">
+          <h4>Resources</h4>
+          <a href="../index.html#faq">FAQ</a>
+          <a href="index.html">Blog</a>
+        </div>
+        <div class="foot-col">
+          <h4>Company</h4>
+          <a href="../index.html">About</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 ZextaPay. All rights reserved.</span>
+      <span>Built for WooCommerce</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const navBurger = document.getElementById('nav-burger');
+  const navPanel = document.getElementById('nav-mobile-panel');
+  navBurger.addEventListener('click', () => {
+    const isOpen = navPanel.classList.toggle('open');
+    navBurger.setAttribute('aria-expanded', isOpen);
+    navBurger.innerHTML = isOpen ? '<i class="ti ti-x" aria-hidden="true"></i>' : '<i class="ti ti-menu-2" aria-hidden="true"></i>';
+  });
+  navPanel.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      navPanel.classList.remove('open');
+      navBurger.setAttribute('aria-expanded', 'false');
+      navBurger.innerHTML = '<i class="ti ti-menu-2" aria-hidden="true"></i>';
+    });
+  });
+</script>
+</body>
+</html>
